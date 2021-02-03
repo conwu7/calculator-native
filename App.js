@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, Platform } from 'react-native';
 import Calculator from "./Calculator";
 
 export default function App() {
@@ -18,5 +18,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'darkslategray',
     alignItems: 'stretch',
     justifyContent: 'center',
+    paddingTop: Platform.OS === 'android' ? 30 : 0
   },
 });

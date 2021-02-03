@@ -1,4 +1,4 @@
-import {StyleSheet} from "react-native";
+import {StyleSheet, Platform} from "react-native";
 
 const styles = StyleSheet.create({
     appContainer: {
@@ -14,7 +14,44 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         marginTop: 10,
-        justifyContent: 'flex-start'
+        justifyContent: 'space-between',
+    },
+    pasteInputAndButtonWrapper: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'flex-end'
+    },
+    moreInputView: {
+        flex: Platform.OS === 'android' ? 0.8 : 0.5,
+        alignItems: 'center',
+        justifyContent: 'space-between'
+    },
+    pasteField: {
+        marginBottom: 5,
+        backgroundColor: 'white',
+        width: '90%',
+        height: 50,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        fontSize: 25,
+        textAlign: 'center',
+        color: 'dimgray'
+    },
+    applyButton: {
+        height: 50,
+        width: '90%',
+        borderRadius: 5,
+        marginBottom: 10,
+        backgroundColor: 'seagreen',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    applyButtonText: {
+        fontSize: 40
+    },
+    pasteButton: {
+        alignSelf: 'flex-end',
+        backgroundColor: '#008dc7'
     },
     moreButton: {
         width: 150,
@@ -24,7 +61,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#70964C'
     },
     moreButtonText: {
-        fontSize: 30
+        fontSize: 30,
     },
     moreContainerView: {
         flex: 1,

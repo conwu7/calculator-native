@@ -1,8 +1,8 @@
-// import { MdKeyboardBackspace, MdExpandMore, MdDone } from 'react-icons/md';
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Pressable, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { Text, TextInput, View, TouchableOpacity,
+    Modal, ScrollView, KeyboardAvoidingView } from 'react-native';
 import styles from "./styles";
-import { useFonts, KulimPark_400Regular, KulimPark_700Bold} from "@expo-google-fonts/kulim-park";
+import { useFonts, KulimPark_400Regular, KulimPark_700Bold } from "@expo-google-fonts/kulim-park";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Calculator() {
@@ -15,7 +15,8 @@ function Calculator() {
     const [hasError, setErrorStatus] = useState(false);
     const [pastResults, setPastResults] = useState([]);
     const [moreButtonExpanded, setMoreButtonStatus] = useState(false);
-    const inputFieldID = "pastedNumberField";
+    const [pasteFieldRequired, setPasteFieldRequired] = useState(false);
+    const [pasteValue, setPastedValue] = useState('');
     // get past results from local storage
     useEffect(() => {
         const getData = async () => {
@@ -24,19 +25,16 @@ function Calculator() {
                 value = value !== null ? JSON.parse(value) : [];
                 setPastResults(value);
             } catch (e) {
+                alert(`Could not retrieve past results`)
             }
         }
         getData().catch(e=>console.log(e));
     }, [])
-    // on mobile set height to fullscreen. Doesn't always apply to device width > 800 due to max height set.
-    /*useEffect(() => {
-        setAppHeight();
-    }, []);*/
     // used directly on previous expression/current number displayed on dom.
     // add thousand separators
     const formatForDisplay = useCallback( (str) => {
         // max digits for numbers displayed to user
-        const maxDigits = {style:'decimal', maximumFractionDigits: 13, maximumSignificantDigits: 17};
+        const maxDigits = {style:'decimal', maximumFractionDigits: 14, maximumSignificantDigits: 14};
         if (isNaN(Number(str))) return str;
         if (str === null) return str;
         // don't remove dot for decimal
@@ -69,14 +67,20 @@ function Calculator() {
     const handleClearPastResults = () => {
         setPastResults([]);
         AsyncStorage.clear().catch(e => console.log(e));
-        setTimeout(()=>setMoreButtonStatus(false), 300);
+        setTimeout(()=>setMoreButtonStatus(false), 200);
     }
     // function to handle selecting a past result - set it to current number string
     const handleUsePastResult = useCallback( function (pastResult, noLimit) {
         return () => {
             const resultToUse = pastResult.replace(/,/g, '');
-            if (isNaN(Number(resultToUse))) return window.alert(pastResult + ' is not a valid number');
-            if (resultToUse.length > 14 && !noLimit) return window.alert(`Number is too big - 14 digits max (${resultToUse.length})`);
+            if (isNaN(Number(resultToUse))) {
+                window.alert(pastResult + ' is not a valid number');
+                return false
+            }
+            if (resultToUse.length > 14 && !noLimit) {
+                window.alert(`Number is too big - 14 digits max (${resultToUse.length})`);
+                return false
+            }
             if (hasError) reset();
             else if (previousNumber) setPreviousDisplay(formatForDisplay(previousNumber));
             setCurrentNumberAsResult(false);
@@ -90,16 +94,18 @@ function Calculator() {
             }
             setCurrentNumberString(resultToUse);
             setMoreButtonStatus(false);
+            return true
         }
     }, [currentOperator, formatForDisplay, hasError, isOperatorActive, previousNumber])
-   /* // function to handle pasted numbers
+    // function to handle pasted numbers
     const handlePastedNumber = useCallback(function (e) {
         e.preventDefault();
-        const value = document.getElementById(inputFieldID).value;
-        if (value === "") return
-        handleUsePastResult(value)();
-        document.activeElement.blur(); // remove focus from input so further keyboard presses are not sent to the text field
-    }, [handleUsePastResult])*/
+        if (pasteValue === "") return
+        const pasteSuccess = handleUsePastResult(pasteValue)();
+        if (pasteSuccess) {
+            setPasteFieldRequired(false);
+        }
+    }, [handleUsePastResult, pasteValue])
     // function to prevent erroneous entries when focus is on a button
     const preventClickEventOnKeyDown = (e) => e.preventDefault();
     // function to handle number clicks
@@ -254,6 +260,25 @@ function Calculator() {
         setPreviousDisplay(null);
         setErrorStatus(false);
     }
+    // check if a current number has more than 12 significant digits
+    function numberTooBig (str) {
+        if (str === null) return false;
+        const numberStr = str.toString();
+        let length = str.length;
+        if (numberStr.includes('.')) length--;
+        if (numberStr.includes('-')) length--;
+        return length >= 13;
+    }
+    // toggle past results container
+    // status is optional - default is opposite of current status
+    function toggleMoreOptions (newStatus) {
+        if (newStatus && newStatus === 'collapse') return setMoreButtonStatus(false);
+        setMoreButtonStatus(!moreButtonExpanded);
+    }
+    function togglePasteModal (newStatus) {
+        if (newStatus && newStatus === 'collapse') return setPasteFieldRequired(false);
+        setPasteFieldRequired(!pasteFieldRequired);
+    }
     // all buttons in order (order is important)
     const buttons = [
         [
@@ -287,21 +312,6 @@ function Calculator() {
             ["=", 'operator', 'equals', handleOperators('=')]
         ]
     ];
-    // check if a current number has more than 12 significant digits
-    function numberTooBig (str) {
-        if (str === null) return false;
-        const numberStr = str.toString();
-        let length = str.length;
-        if (numberStr.includes('.')) length--;
-        if (numberStr.includes('-')) length--;
-        return length >= 13;
-    }
-    // toggle past results container
-    // status is optional - default is opposite of current status
-    function toggleMoreOptions (newStatus) {
-        if (newStatus && newStatus === 'collapse') return setMoreButtonStatus(false);
-        setMoreButtonStatus(!moreButtonExpanded);
-    }
     return (
       <View style={styles.appContainer}>
           <View style={styles.displayContainer}>
@@ -330,6 +340,43 @@ function Calculator() {
                       >
                       <KulimText style={styles.moreButtonText}>RESULTS</KulimText>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                        style={[styles.moreButton, styles.pasteButton]}
+                        onPress={togglePasteModal}
+                      >
+                      <KulimText style={styles.moreButtonText}>PASTE #</KulimText>
+                  </TouchableOpacity>
+                  <Modal
+                      animationType="slide"
+                      transparent={true}
+                      visible={pasteFieldRequired}
+                  >
+                      <KeyboardAvoidingView style={[styles.moreContainerView, styles.moreInputView]}>
+                          <TouchableOpacity
+                              onPress={togglePasteModal}
+                              style={styles.closeMoreButton}
+                          >
+                              <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
+                          </TouchableOpacity>
+                          <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>PASTE OR ENTER A NUMBER</KulimText>
+                          <View style={styles.pasteInputAndButtonWrapper}>
+                              <TextInput
+                              enablesReturnKeyAutomatically={true}
+                              keyboardAppearance="dark"
+                              keyboardType="numbers-and-punctuation"
+                              returnKeyType="go"
+                              style={styles.pasteField}
+                              onSubmitEditing={handlePastedNumber}
+                              onChangeText={(newValue) => setPastedValue(newValue)}
+                          />
+                              <TouchableOpacity
+                                  onPress={handlePastedNumber}
+                                  style={styles.applyButton}
+                              >
+                                  <KulimText fontWeight="bold" style={styles.applyButtonText}>✔</KulimText>
+                              </TouchableOpacity></View>
+                      </KeyboardAvoidingView>
+                  </Modal>
                   <Modal
                       animationType="slide"
                       transparent={true}
@@ -381,51 +428,6 @@ function Calculator() {
                   </Modal>
               </View>
           </View>
-         {/* <div className={style.moreOptionsContainer}>
-              <CollapsibleCard
-                  cardHeader=
-                      {
-                          <button
-                              type="button"
-                              onKeyDown={preventClickEventOnKeyDown}
-                              onClick={toggleMoreOptions}
-                              tabIndex="-1"
-                              className={`${style.moreButton} ${moreButtonExpanded?style.expanded:""}`}
-                          >
-                              <MdExpandMore />
-                          </button>
-                      }
-                  wrapperClassName={style.optionsWrapper}
-                  isCollapsed={!moreButtonExpanded}
-                  toggleCollapse={toggleMoreOptions}
-                  hideOnFocusLost={false}
-                  disableHeaderButton={true}
-                  >
-                  <div className={style.optionsContainer}>
-                      <div>
-                          <form
-                              onSubmit={handlePastedNumber}
-                              className={style.pasteContainer}>
-                              <input
-                                  className={style.pasteNumberField}
-                                  id={inputFieldID}
-                                  type="text"
-                                  placeholder="Paste a number"
-                              />
-                              <button
-                                  type="submit"
-                                  className={style.applyPastedNumber}
-                                  tabIndex="-1"
-                              >
-                                <MdDone />
-                              </button>
-
-                          </form>
-                      </div>
-                  </div>
-              </CollapsibleCard>
-
-          </div>*/}
           <View style={styles.buttonContainer}>
           {
               buttons.map((buttonSection, index) => (
@@ -443,6 +445,8 @@ function Calculator() {
                                   data-operator={button[2]}
                               >
                                   <KulimText
+                                      numberOfLines={1}
+                                      adjustsFontSizeToFit={true}
                                       style={styles.buttonText}
                                   >
                                       {(hasError && button[0] !=='Clr') ?"":button[0]}
