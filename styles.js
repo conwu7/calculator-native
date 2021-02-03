@@ -11,10 +11,11 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     moreButtonView: {
-        flex: 1,
+        flex: 1.2,
         flexDirection: 'row',
-        marginTop: 10,
+        marginVertical: 10,
         justifyContent: 'space-between',
+        alignItems: 'stretch'
     },
     pasteInputAndButtonWrapper: {
         width: '100%',
@@ -50,8 +51,7 @@ const styles = StyleSheet.create({
         fontSize: 40
     },
     pasteButton: {
-        alignSelf: 'flex-end',
-        backgroundColor: '#008dc7'
+        backgroundColor: '#008dc7',
     },
     moreButton: {
         width: 150,
@@ -61,12 +61,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#70964C'
     },
     moreButtonText: {
+        justifyContent: 'center',
         fontSize: 30,
     },
     moreContainerView: {
         flex: 1,
         marginVertical: 50,
-        marginHorizontal: 30,
+        marginHorizontal: 5,
         borderRadius: 10,
         alignSelf: 'stretch',
         backgroundColor: 'cadetblue'
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'firebrick'
+        backgroundColor: 'darkslategray'
     },
     closeMoreButtonText: {
         lineHeight: 70,
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     pastResultText: {
-        fontSize: 35,
+        fontSize: 30,
         textAlign: 'center',
         color: 'antiquewhite'
     },
@@ -111,6 +112,8 @@ const styles = StyleSheet.create({
     },
     clearPastResults: {
         flexShrink: 1,
+        width: '80%',
+        alignSelf: 'center',
         marginTop: 20,
         backgroundColor: '#b22222'
     },
@@ -155,11 +158,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        height: 80,
+        height: 70,
         width: 80,
         borderRadius: 50,
         backgroundColor: '#708090',
-        padding: 10,
         marginHorizontal: 10
     },
     operator: {
@@ -179,10 +181,10 @@ const styles = StyleSheet.create({
     },
     buttonSection: {
         flexDirection: 'row',
-        justifyContent: 'space-evenly'
+        justifyContent: 'space-evenly',
     },
     buttonText: {
-        fontSize: 50,
+        fontSize: 45,
         color: 'antiquewhite'
     }
 });

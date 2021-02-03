@@ -315,6 +315,28 @@ function Calculator() {
     return (
       <View style={styles.appContainer}>
           <View style={styles.displayContainer}>
+              <View style={styles.moreButtonView}>
+                  <TouchableOpacity
+                      style={styles.moreButton}
+                      onPress={toggleMoreOptions}
+                  >
+                      <KulimText
+                          adjustsFontSizeToFit={true}
+                          style={styles.moreButtonText}
+                      >
+                          RESULTS</KulimText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                      style={[styles.moreButton, styles.pasteButton]}
+                      onPress={togglePasteModal}
+                  >
+                      <KulimText
+                          adjustsFontSizeToFit={true}
+                          style={styles.moreButtonText}
+                      >
+                          PASTE #</KulimText>
+                  </TouchableOpacity>
+              </View>
               <View style={styles.operatorAndPreviousExpression}>
                   <KulimText style={styles.previousExpressionDisplay}>{previousDisplay}</KulimText>
                   <KulimText style={styles.currentOperatorDisplay}>{currentOperator}</KulimText>
@@ -333,34 +355,21 @@ function Calculator() {
                       {formatCurrentNumberDisplayed(currentNumberString)}
                   </KulimText>
               </View>
-              <View style={styles.moreButtonView}>
-                  <TouchableOpacity
-                      style={styles.moreButton}
-                      onPress={toggleMoreOptions}
+              <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={pasteFieldRequired}
+              >
+                  <KeyboardAvoidingView style={[styles.moreContainerView, styles.moreInputView]}>
+                      <TouchableOpacity
+                          onPress={togglePasteModal}
+                          style={styles.closeMoreButton}
                       >
-                      <KulimText style={styles.moreButtonText}>RESULTS</KulimText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                        style={[styles.moreButton, styles.pasteButton]}
-                        onPress={togglePasteModal}
-                      >
-                      <KulimText style={styles.moreButtonText}>PASTE #</KulimText>
-                  </TouchableOpacity>
-                  <Modal
-                      animationType="slide"
-                      transparent={true}
-                      visible={pasteFieldRequired}
-                  >
-                      <KeyboardAvoidingView style={[styles.moreContainerView, styles.moreInputView]}>
-                          <TouchableOpacity
-                              onPress={togglePasteModal}
-                              style={styles.closeMoreButton}
-                          >
-                              <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
-                          </TouchableOpacity>
-                          <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>PASTE OR ENTER A NUMBER</KulimText>
-                          <View style={styles.pasteInputAndButtonWrapper}>
-                              <TextInput
+                          <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
+                      </TouchableOpacity>
+                      <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>PASTE OR ENTER A NUMBER</KulimText>
+                      <View style={styles.pasteInputAndButtonWrapper}>
+                          <TextInput
                               enablesReturnKeyAutomatically={true}
                               keyboardAppearance="dark"
                               keyboardType="numbers-and-punctuation"
@@ -369,68 +378,62 @@ function Calculator() {
                               onSubmitEditing={handlePastedNumber}
                               onChangeText={(newValue) => setPastedValue(newValue)}
                           />
-                              <TouchableOpacity
-                                  onPress={handlePastedNumber}
-                                  style={styles.applyButton}
-                              >
-                                  <KulimText fontWeight="bold" style={styles.applyButtonText}>✔</KulimText>
-                              </TouchableOpacity></View>
-                      </KeyboardAvoidingView>
-                  </Modal>
-                  <Modal
-                      animationType="slide"
-                      transparent={true}
-                      visible={moreButtonExpanded}
-                      >
-                      <View style={styles.moreContainerView}>
                           <TouchableOpacity
-                            onPress={toggleMoreOptions}
-                            style={styles.closeMoreButton}
+                              onPress={handlePastedNumber}
+                              style={styles.applyButton}
                           >
-                              <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
-                          </TouchableOpacity>
-                          <View style={styles.resultsContainer}>
-                              {
-                                  pastResults.length === 0 ?
-                                      <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>NO RESULTS</KulimText> :
-                                      <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>PAST RESULTS</KulimText>
-                              }
-                              {
-                                  pastResults.map((result, index) => (
-                                      <TouchableOpacity
-                                          key={index}
-                                          style={styles.pastResult}
-                                          // onKeyDown={preventClickEventOnKeyDown}
-                                          onPress={handleUsePastResult(result, true)}
-                                      >
-                                          <KulimText
-                                              numberOfLines={1}
-                                              adjustsFontSizeToFit={true}
-                                              style={styles.pastResultText}
-                                          >
-                                              {result}
-                                          </KulimText>
-                                      </TouchableOpacity>
-                                  ))
-                              }
-                              {
-                                  pastResults.length > 0 &&
-                                  <TouchableOpacity
-                                      style={[styles.pastResult, styles.clearPastResults]}
-                                      // onKeyDown={preventClickEventOnKeyDown}
-                                      onPress={handleClearPastResults}
+                              <KulimText fontWeight="bold" style={styles.applyButtonText}>✔</KulimText>
+                          </TouchableOpacity></View>
+                  </KeyboardAvoidingView>
+              </Modal>
+              <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={moreButtonExpanded}
+              >
+                  <View style={styles.moreContainerView}>
+                      <TouchableOpacity
+                          onPress={toggleMoreOptions}
+                          style={styles.closeMoreButton}
+                      >
+                          <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
+                      </TouchableOpacity>
+                      <ScrollView style={styles.resultsContainer}>
+                          {
+                              pastResults.length > 0 &&
+                              <TouchableOpacity
+                                  style={[styles.pastResult, styles.clearPastResults]}
+                                  // onKeyDown={preventClickEventOnKeyDown}
+                                  onPress={handleClearPastResults}
+                              >
+                                  <KulimText
+                                      adjustsFontSizeToFit={true}
+                                      style={styles.pastResultText}
                                   >
-                                     <KulimText
-                                         adjustsFontSizeToFit={true}
-                                         style={styles.pastResultText}
-                                     >
-                                         Clear All Results</KulimText>
+                                      Clear All Results</KulimText>
+                              </TouchableOpacity>
+                          }
+                          {
+                              pastResults.map((result, index) => (
+                                  <TouchableOpacity
+                                      key={index}
+                                      style={styles.pastResult}
+                                      // onKeyDown={preventClickEventOnKeyDown}
+                                      onPress={handleUsePastResult(result, true)}
+                                  >
+                                      <KulimText
+                                          numberOfLines={1}
+                                          adjustsFontSizeToFit={true}
+                                          style={styles.pastResultText}
+                                      >
+                                          {result}
+                                      </KulimText>
                                   </TouchableOpacity>
-                              }
-                          </View>
-                      </View>
-                  </Modal>
-              </View>
+                              ))
+                          }
+                      </ScrollView>
+                  </View>
+              </Modal>
           </View>
           <View style={styles.buttonContainer}>
           {
