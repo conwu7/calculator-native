@@ -1,7 +1,9 @@
 // import { MdKeyboardBackspace, MdExpandMore, MdDone } from 'react-icons/md';
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Pressable, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Pressable, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import styles from "./styles";
 import { useFonts, KulimPark_400Regular, KulimPark_700Bold} from "@expo-google-fonts/kulim-park";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Calculator() {
     const [currentNumberString, setCurrentNumberString] = useState("0");
@@ -15,18 +17,26 @@ function Calculator() {
     const [moreButtonExpanded, setMoreButtonStatus] = useState(false);
     const inputFieldID = "pastedNumberField";
     // get past results from local storage
-    // useEffect(() => {
-    //     setPastResults(JSON.parse(localStorage.getItem('calculatorPastResults')) || []);
-    // }, [])
+    useEffect(() => {
+        const getData = async () => {
+            try {
+                let value = await AsyncStorage.getItem('@pastResults');
+                value = value !== null ? JSON.parse(value) : [];
+                setPastResults(value);
+            } catch (e) {
+            }
+        }
+        getData().catch(e=>console.log(e));
+    }, [])
     // on mobile set height to fullscreen. Doesn't always apply to device width > 800 due to max height set.
-    // useEffect(() => {
-    //     setAppHeight();
-    // }, []);
+    /*useEffect(() => {
+        setAppHeight();
+    }, []);*/
     // used directly on previous expression/current number displayed on dom.
     // add thousand separators
     const formatForDisplay = useCallback( (str) => {
         // max digits for numbers displayed to user
-        const maxDigits = {style:'decimal', maximumFractionDigits: 10, maximumSignificantDigits: 14};
+        const maxDigits = {style:'decimal', maximumFractionDigits: 13, maximumSignificantDigits: 17};
         if (isNaN(Number(str))) return str;
         if (str === null) return str;
         // don't remove dot for decimal
@@ -49,15 +59,17 @@ function Calculator() {
     // add new result to past results array. mutate where necessary
     const handlePastResults = useCallback( function (newResult) {
         let newArray = [...pastResults];
-        if (pastResults.length >= 5) newArray.pop();
+        if (pastResults.length >= 9) newArray.pop();
         newArray.unshift(newResult);
         setPastResults(newArray);
-        localStorage.setItem('calculatorPastResults', JSON.stringify(newArray));
+        AsyncStorage.setItem('@pastResults', JSON.stringify(newArray))
+            .catch(e => alert(`Couldn't save result`));
     }, [pastResults])
     // clear past results
     const handleClearPastResults = () => {
         setPastResults([]);
-        localStorage.setItem('calculatorPastResults', JSON.stringify([]));
+        AsyncStorage.clear().catch(e => console.log(e));
+        setTimeout(()=>setMoreButtonStatus(false), 300);
     }
     // function to handle selecting a past result - set it to current number string
     const handleUsePastResult = useCallback( function (pastResult, noLimit) {
@@ -80,14 +92,14 @@ function Calculator() {
             setMoreButtonStatus(false);
         }
     }, [currentOperator, formatForDisplay, hasError, isOperatorActive, previousNumber])
-    // function to handle pasted numbers
+   /* // function to handle pasted numbers
     const handlePastedNumber = useCallback(function (e) {
         e.preventDefault();
         const value = document.getElementById(inputFieldID).value;
         if (value === "") return
         handleUsePastResult(value)();
         document.activeElement.blur(); // remove focus from input so further keyboard presses are not sent to the text field
-    }, [handleUsePastResult])
+    }, [handleUsePastResult])*/
     // function to prevent erroneous entries when focus is on a button
     const preventClickEventOnKeyDown = (e) => e.preventDefault();
     // function to handle number clicks
@@ -191,7 +203,7 @@ function Calculator() {
                 // set previous to result. Setting previous number here since user can't mutate result directly
                 setCurrentNumberString(null);
                 setCurrentNumberAsResult(true);
-                // handlePastResults(formatForDisplay(result));
+                handlePastResults(formatForDisplay(result));
                 setPreviousNumber(formatForDisplay(result).replace(/,/g,''));
             }
             // if no calculation is done, set the current operator and the previous number as the current number displayed
@@ -204,7 +216,7 @@ function Calculator() {
     }, [
         currentNumberString, currentOperator, formatForDisplay,
         hasError, previousNumber
-    ])
+    ]);
     // function to remove last user entry
     const removeLastEntry  = useCallback( function () {
         if (currentNumberIsResult || isOperatorActive || hasError) return;
@@ -212,65 +224,6 @@ function Calculator() {
         if (currentLength <= 1) return setCurrentNumberString("0");
         setCurrentNumberString(currentNumberString.slice(0, currentLength-1));
     }, [currentNumberString, currentNumberIsResult, hasError, isOperatorActive])
-    // function to handle key presses
-    const handleKeyUp = useCallback(
-        (e) => {
-            e.preventDefault();
-            if (e.target.id === inputFieldID) return
-            if (e.key >= 0 && e.key <= 9) {
-                return handleNumbers((e.key))();
-            }
-            if (['*', '-', '/', '+', '=', '^'].includes(e.key)) {
-                return handleOperators(e.key)();
-            }
-            switch (e.key) {
-                case '.' : {
-                    handleNumbers('.')();
-                    break
-                }
-                case 'Backspace' : {
-                    removeLastEntry();
-                    break;
-                }
-                case 'Escape' : {
-                    reset();
-                    break
-                }
-                case 'Enter' : {
-                    handleOperators('=')();
-                    break
-                }
-                default : {
-                    break
-                }
-            }
-        }, [handleNumbers, handleOperators, removeLastEntry]
-    )
-    // add event listeners for keyboard - remove on unmount
-    // useEffect(() => {
-    //     function scrollToTop () {
-    //         document.body.scrollTop = 0;
-    //         window.scrollTop = 0;
-    //         document.body.scrollTo(0, 0);
-    //         window.scrollTo(0, 0);
-    //     }
-    //     scrollToTop();
-    //     document.getElementById(inputFieldID)
-    //         .addEventListener('focusout', scrollToTop);
-    //     window.addEventListener('keyup', handleKeyUp);
-    //     return () => {
-    //         document.getElementById(inputFieldID)
-    //             .removeEventListener('focusout', scrollToTop);
-    //         window.removeEventListener('keyup', handleKeyUp);
-    //     }
-    // }, [handleKeyUp]);
-    // window resizing listener
-    window.onresize = setAppHeight;
-    function setAppHeight () {
-        const containerEl = document.getElementsByClassName(`${style.container}`)[0];
-        const newHeight = window.navigator.standalone ? window.innerHeight - 40 : window.innerHeight;
-        containerEl.style.height = `${newHeight}px`;
-    }
     // function to handle negative toggle
     function handleNegativeToggle () {
         if (hasError) return
@@ -306,7 +259,7 @@ function Calculator() {
         [
             ["Clr", "clear", 'clear', reset],
             ["⌫", 'backspace', "backspace", removeLastEntry],
-            ["^", 'powerOf', 'powerOf', handleOperators('^')],
+            ["yˣ", 'powerOf', 'powerOf', handleOperators('^')],
             ["÷", 'operator', 'divide', handleOperators('/')]
         ],
         [
@@ -360,10 +313,72 @@ function Calculator() {
                    <KulimText style={styles.answer}>
                        {currentNumberIsResult ? "(Ans)" : ""}
                    </KulimText>
-                  <KulimText fontWeight="bold" style={styles.currentNumber}>
+                  <KulimText
+                      selectable={true}
+                      fontWeight="bold"
+                      numberOfLines={1}
+                      adjustsFontSizeToFit={true}
+                      style={hasError? [styles.currentNumber, styles.hasErrorText] : styles.currentNumber}
+                  >
                       {formatCurrentNumberDisplayed(currentNumberString)}
                   </KulimText>
-
+              </View>
+              <View style={styles.moreButtonView}>
+                  <TouchableOpacity
+                      style={styles.moreButton}
+                      onPress={toggleMoreOptions}
+                      >
+                      <KulimText style={styles.moreButtonText}>RESULTS</KulimText>
+                  </TouchableOpacity>
+                  <Modal
+                      animationType="slide"
+                      transparent={true}
+                      visible={moreButtonExpanded}
+                      >
+                      <View style={styles.moreContainerView}>
+                          <TouchableOpacity
+                            onPress={toggleMoreOptions}
+                            style={styles.closeMoreButton}
+                          >
+                              <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
+                          </TouchableOpacity>
+                          <ScrollView style={styles.resultsContainer}>
+                              {
+                                  pastResults.length === 0 ?
+                                      <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>NO RESULTS</KulimText> :
+                                      <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>PAST RESULTS</KulimText>
+                              }
+                              {
+                                  pastResults.map((result, index) => (
+                                      <TouchableOpacity
+                                          key={index}
+                                          style={styles.pastResult}
+                                          // onKeyDown={preventClickEventOnKeyDown}
+                                          onPress={handleUsePastResult(result, true)}
+                                      >
+                                          <KulimText
+                                              numberOfLines={1}
+                                              adjustsFontSizeToFit={true}
+                                              style={styles.pastResultText}
+                                          >
+                                              {result}
+                                          </KulimText>
+                                      </TouchableOpacity>
+                                  ))
+                              }
+                              {
+                                  pastResults.length > 0 &&
+                                  <TouchableOpacity
+                                      style={[styles.pastResult, styles.clearPastResults]}
+                                      // onKeyDown={preventClickEventOnKeyDown}
+                                      onPress={handleClearPastResults}
+                                  >
+                                     <KulimText style={styles.pastResultText}>Clear All Results</KulimText>
+                                  </TouchableOpacity>
+                              }
+                          </ScrollView>
+                      </View>
+                  </Modal>
               </View>
           </View>
          {/* <div className={style.moreOptionsContainer}>
@@ -406,37 +421,6 @@ function Calculator() {
                               </button>
 
                           </form>
-                          {
-                              pastResults.length === 0 ?
-                              <span className={style.pastResultsHeader}>NO RESULTS</span> :
-                              <span className={style.pastResultsHeader}>PAST RESULTS</span>
-                          }
-                          {
-                              pastResults.map((result, index) => (
-                                  <button
-                                      type="button"
-                                      key={index}
-                                      className={style.pastResult}
-                                      onKeyDown={preventClickEventOnKeyDown}
-                                      onClick={handleUsePastResult(result, true)}
-                                      tabIndex="-1"
-                                  >
-                                      {result}
-                                  </button>
-                              ))
-                          }
-                          {
-                              pastResults.length > 0 &&
-                                  <button
-                                      type="button"
-                                      className={style.clearPastResults}
-                                      onKeyDown={preventClickEventOnKeyDown}
-                                      onClick={handleClearPastResults}
-                                      tabIndex="-1"
-                                  >
-                                      Clear All Results
-                                  </button>
-                          }
                       </div>
                   </div>
               </CollapsibleCard>
@@ -473,86 +457,7 @@ function Calculator() {
       </View>
   );
 }
-const styles = StyleSheet.create({
-    appContainer: {
-        flex: 1,
-        alignSelf: 'stretch',
-        justifyContent: 'space-between',
-    },
-    displayContainer: {
-        flex: 2,
-        padding: 20,
-        justifyContent: 'space-between'
-    },
-    operatorAndPreviousExpression: {
-        flex: 2,
-        flexDirection: 'row',
-        justifyContent: 'space-between'
-    },
-    previousExpressionDisplay: {
-        flex: 9,
-        fontSize: 25,
-        color: 'antiquewhite'
-    },
-    currentOperatorDisplay: {
-        flex: 1,
-        fontSize: 25,
-        color: 'antiquewhite',
-        textAlign: 'right'
-    },
-    currentNumberDisplay: {
-        flex: 3,
-        justifyContent: 'flex-end',
-        alignItems: 'flex-end'
-    },
-    answer: {
-        color: 'lightgreen',
-        fontSize: 30,
-    },
-    currentNumber: {
-        fontSize: 48,
-        color: 'antiquewhite'
-    },
-    buttonContainer: {
-        flex: 4,
-        justifyContent: 'space-evenly',
-        color: 'darkslategray',
-    },
-    button: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: 80,
-        width: 80,
-        borderRadius: 50,
-        backgroundColor: '#708090',
-        padding: 10,
-        marginHorizontal: 10
-    },
-    operator: {
-        backgroundColor: 'black',
-    },
-    clear: {
-        backgroundColor: '#006400'
-    },
-    powerOf: {
-        backgroundColor: '#e37b0e'
-    },
-    backspace: {
-        backgroundColor: 'rgba(139,0,0,.6)'
-    },
-    regular: {
-        color: 'black'
-    },
-    buttonSection: {
-        flexDirection: 'row',
-        justifyContent: 'space-evenly'
-    },
-    buttonText: {
-        fontSize: 50,
-        color: 'antiquewhite'
-    }
-});
+
 
 function KulimText (props) {
     const [fontsLoaded] = useFonts({
