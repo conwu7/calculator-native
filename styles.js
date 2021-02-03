@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     },
     resultsContainer: {
         padding: 10,
+        flexShrink: 1
     },
     pastResultsHeader: {
         fontSize: 30,
@@ -102,12 +103,14 @@ const styles = StyleSheet.create({
         color: 'antiquewhite'
     },
     pastResult: {
+        flexShrink: 1,
         margin: 5,
         padding: 5,
         borderRadius: 5,
         backgroundColor: '#708090'
     },
     clearPastResults: {
+        flexShrink: 1,
         marginTop: 20,
         backgroundColor: '#b22222'
     },

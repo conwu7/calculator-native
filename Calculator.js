@@ -57,7 +57,7 @@ function Calculator() {
     // add new result to past results array. mutate where necessary
     const handlePastResults = useCallback( function (newResult) {
         let newArray = [...pastResults];
-        if (pastResults.length >= 9) newArray.pop();
+        if (pastResults.length >= 10) newArray.pop();
         newArray.unshift(newResult);
         setPastResults(newArray);
         AsyncStorage.setItem('@pastResults', JSON.stringify(newArray))
@@ -389,7 +389,7 @@ function Calculator() {
                           >
                               <KulimText fontWeight="bold" style={styles.closeMoreButtonText}>×</KulimText>
                           </TouchableOpacity>
-                          <ScrollView style={styles.resultsContainer}>
+                          <View style={styles.resultsContainer}>
                               {
                                   pastResults.length === 0 ?
                                       <KulimText fontWeight={'bold'} style={styles.pastResultsHeader}>NO RESULTS</KulimText> :
@@ -420,10 +420,14 @@ function Calculator() {
                                       // onKeyDown={preventClickEventOnKeyDown}
                                       onPress={handleClearPastResults}
                                   >
-                                     <KulimText style={styles.pastResultText}>Clear All Results</KulimText>
+                                     <KulimText
+                                         adjustsFontSizeToFit={true}
+                                         style={styles.pastResultText}
+                                     >
+                                         Clear All Results</KulimText>
                                   </TouchableOpacity>
                               }
-                          </ScrollView>
+                          </View>
                       </View>
                   </Modal>
               </View>
@@ -475,7 +479,12 @@ function KulimText (props) {
     const boldStyle = {fontFamily: 'KulimPark_700Bold' }
     const style = props.fontWeight === 'bold' ? boldStyle : defaultStyle;
     const customStyles = Array.isArray(props.style) ? props.style : [props.style];
-    return <Text {...props} style={[style, ...customStyles]}>{props.children}</Text>
+    return <Text
+        {...props}
+        style={[style, ...customStyles]}
+    >
+        {props.children}
+    </Text>
 }
 
 export default Calculator;
