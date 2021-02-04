@@ -4,6 +4,7 @@ import { Text, TextInput, View, TouchableOpacity,
 import styles from "./styles";
 import { useFonts, KulimPark_400Regular, KulimPark_700Bold } from "@expo-google-fonts/kulim-park";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 
 function Calculator() {
     const [currentNumberString, setCurrentNumberString] = useState("0");
@@ -19,6 +20,8 @@ function Calculator() {
     const [pasteValue, setPastedValue] = useState('');
     // get past results from local storage
     useEffect(() => {
+        SplashScreen.preventAutoHideAsync().catch();
+        setTimeout(()=>SplashScreen.hideAsync().catch(), 200);
         const getData = async () => {
             try {
                 let value = await AsyncStorage.getItem('@pastResults');
