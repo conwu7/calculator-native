@@ -46,7 +46,6 @@ function Calculator() {
         }
         // don't remove zeros after a decimal
         if (str.toString().slice(-1) === "0" && str.toString().includes('.')) {
-            console.log(str);
             const strArray = str.split('.');
             return `${strArray[0].toLocaleString()}.${strArray[1]}`
         }
