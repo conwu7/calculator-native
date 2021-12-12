@@ -29,7 +29,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "conwu7.calculator"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#2f4f4f"
     },
     "androidNavigationBar": {
       "backgroundColor": "#2f4f4f"

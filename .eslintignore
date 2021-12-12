@@ -1,0 +1,12 @@
+# frontend folder
+mymedia-react/
+public/
+
+node_modules/
+vscode/
+
+.expo/
+.expo-shared/
+assets/
+
+babel.config.js
