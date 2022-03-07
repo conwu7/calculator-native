@@ -51,7 +51,7 @@ const Calculator = function () {
     if (str === null) return str
     // don't remove dot for decimal
     if (str.toString().slice(-1) === ".") {
-      return `${Number(str.slice(0, -1)).toLocaleString()}.`
+      return `${addCommasToNumber(Number(str.slice(0, -1))).toLocaleString()}.`
     }
     if (str.toString().includes("e")) {
       return addCommasToNumber(Number(str).toFixed(12))
