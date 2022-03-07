@@ -14,7 +14,6 @@ import {
   KulimPark_700Bold,
 } from "@expo-google-fonts/kulim-park"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import * as SplashScreen from "expo-splash-screen"
 import styles from "./styles"
 
 const Calculator = function () {
@@ -32,8 +31,6 @@ const Calculator = function () {
 
   // get past results from local storage
   useEffect(() => {
-    SplashScreen.preventAutoHideAsync().catch()
-    setTimeout(() => SplashScreen.hideAsync().catch(), 200)
     const getData = async () => {
       try {
         let value = await AsyncStorage.getItem("@pastResults")
@@ -49,24 +46,22 @@ const Calculator = function () {
   // used directly on previous expression/current number displayed on dom.
   // add thousand separators
   const formatForDisplay = useCallback((str) => {
-    // max digits for numbers displayed to user
-    const maxDigits = {
-      style: "decimal",
-      maximumFractionDigits: 14,
-      maximumSignificantDigits: 14,
-    }
     if (isNaN(Number(str))) return str
+
     if (str === null) return str
     // don't remove dot for decimal
     if (str.toString().slice(-1) === ".") {
       return `${Number(str.slice(0, -1)).toLocaleString()}.`
     }
+    if (str.toString().includes("e")) {
+      return addCommasToNumber(Number(str).toFixed(12))
+    }
     // don't remove zeros after a decimal
     if (str.toString().slice(-1) === "0" && str.toString().includes(".")) {
-      const strArray = str.split(".")
-      return `${strArray[0].toLocaleString()}.${strArray[1]}`
+      const strArray = str.toString().split(".")
+      return `${addCommasToNumber(strArray[0])}.${strArray[1]}`
     }
-    return Number(str).toLocaleString("en-US", maxDigits)
+    return addCommasToNumber(str)
   }, [])
 
   // format current number for display - if current number is null, use previous number
@@ -81,10 +76,10 @@ const Calculator = function () {
   )
 
   // add new result to past results array. mutate where necessary
-  const handlePastResults = useCallback(
+  const addToPastResults = useCallback(
     (newResult) => {
       const newArray = [...pastResults]
-      if (pastResults.length >= 10) newArray.pop()
+      if (pastResults.length >= 20) newArray.pop()
       newArray.unshift(newResult)
       setPastResults(newArray)
       AsyncStorage.setItem("@pastResults", JSON.stringify(newArray)).catch(() =>
@@ -157,7 +152,7 @@ const Calculator = function () {
   const preventClickEventOnKeyDown = (e) => e.preventDefault()
 
   // function to handle number clicks
-  const handleNumbers = useCallback(
+  const handleNumberClicks = useCallback(
     (number) => () => {
       if (hasError) return
       // if operator isn't active, you're not adding to the current number string
@@ -197,6 +192,25 @@ const Calculator = function () {
       formatForDisplay,
     ],
   )
+
+  // handle android's lack of number library
+  const has12OrMoreDecimalDigits = (value) => {
+    return value?.toString().split(".")[1]?.length >= 12
+  }
+
+  const addCommasToNumber = (value) => {
+    const decimalSplit = value.toString().split(".")
+    const decimalValue = !!decimalSplit[1] ? `.${decimalSplit[1]}` : ""
+    const nonDecimals = decimalSplit[0].split("")
+
+    for (let i = nonDecimals.length - 1; i >= 0; i--) {
+      const indexFromDecimal = nonDecimals.length - 1 - i
+      if (indexFromDecimal === 0) continue
+      if (indexFromDecimal % 3 === 0) nonDecimals[i] += ","
+    }
+
+    return `${nonDecimals.join("")}${decimalValue}`
+  }
 
   // function to handle operator clicks
   const handleOperators = useCallback(
@@ -269,15 +283,20 @@ const Calculator = function () {
           setCurrentNumberString("TOO LONG, CLEAR")
           return
         }
-        if (`${result}`.includes("e")) {
+        if (
+          result.toString().includes("e") ||
+          has12OrMoreDecimalDigits(result)
+        ) {
           result = result.toFixed(12)
         }
         // set current number to null. prevent further operations until another number is selected
         // set previous to result. Setting previous number here since user can't mutate result directly
         setCurrentNumberString(null)
         setCurrentNumberAsResult(true)
-        handlePastResults(formatForDisplay(result))
-        setPreviousNumber(formatForDisplay(result).replace(/,/g, ""))
+        addToPastResults(formatForDisplay(result))
+        setPreviousNumber(
+          formatForDisplay(parseFloat(result)).replace(/,/g, ""),
+        )
       }
       // if no calculation is done, set the current operator and the previous number as the current number displayed
       setCurrentOperator(operator)
@@ -365,26 +384,26 @@ const Calculator = function () {
       ["÷", "operator", "divide", handleOperators("/")],
     ],
     [
-      ["7", "regular", "seven", handleNumbers(7)],
-      ["8", "regular", "eight", handleNumbers(8)],
-      ["9", "regular", "nine", handleNumbers(9)],
+      ["7", "regular", "seven", handleNumberClicks(7)],
+      ["8", "regular", "eight", handleNumberClicks(8)],
+      ["9", "regular", "nine", handleNumberClicks(9)],
       ["×", "operator", "multiply", handleOperators("*")],
     ],
     [
-      ["4", "regular", "four", handleNumbers(4)],
-      ["5", "regular", "five", handleNumbers(5)],
-      ["6", "regular", "six", handleNumbers(6)],
+      ["4", "regular", "four", handleNumberClicks(4)],
+      ["5", "regular", "five", handleNumberClicks(5)],
+      ["6", "regular", "six", handleNumberClicks(6)],
       ["-", "operator", "subtract", handleOperators("-")],
     ],
     [
-      ["1", "regular", "one", handleNumbers(1)],
-      ["2", "regular", "two", handleNumbers(2)],
-      ["3", "regular", "three", handleNumbers(3)],
+      ["1", "regular", "one", handleNumberClicks(1)],
+      ["2", "regular", "two", handleNumberClicks(2)],
+      ["3", "regular", "three", handleNumberClicks(3)],
       ["+", "operator", "add", handleOperators("+")],
     ],
     [
-      ["0", "regular", "zero", handleNumbers(0)],
-      [".", "regular", "dot", handleNumbers(".")],
+      ["0", "regular", "zero", handleNumberClicks(0)],
+      [".", "regular", "dot", handleNumberClicks(".")],
       ["±", "regular", "plusMinus", handleNegativeToggle],
       ["=", "operator", "equals", handleOperators("=")],
     ],
@@ -483,18 +502,21 @@ const Calculator = function () {
                 ×
               </KulimText>
             </TouchableOpacity>
-            <ScrollView style={styles.resultsContainer}>
-              {pastResults.length > 0 && (
-                <TouchableOpacity
-                  style={[styles.pastResult, styles.clearPastResults]}
-                  // onKeyDown={preventClickEventOnKeyDown}
-                  onPress={handleClearPastResults}
+            {pastResults.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearPastResults}
+                // onKeyDown={preventClickEventOnKeyDown}
+                onPress={handleClearPastResults}
+              >
+                <KulimText
+                  adjustsFontSizeToFit
+                  style={styles.clearPastResultsText}
                 >
-                  <KulimText adjustsFontSizeToFit style={styles.pastResultText}>
-                    Clear All Results
-                  </KulimText>
-                </TouchableOpacity>
-              )}
+                  Clear All Results
+                </KulimText>
+              </TouchableOpacity>
+            )}
+            <ScrollView style={styles.resultsContainer}>
               {pastResults.map((result, index) => (
                 <TouchableOpacity
                   key={index}
@@ -511,6 +533,7 @@ const Calculator = function () {
                   </KulimText>
                 </TouchableOpacity>
               ))}
+              <View style={styles.bottomPadding} />
             </ScrollView>
           </View>
         </Modal>

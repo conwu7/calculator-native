@@ -6,6 +6,10 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     justifyContent: "space-between",
   },
+  bottomPadding: {
+    height: 20,
+    backgroundColor: "transparent",
+  },
   displayContainer: {
     flex: 2,
     padding: 10,
@@ -71,6 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: "stretch",
     backgroundColor: "cadetblue",
+    padding: 10,
   },
   closeMoreButton: {
     width: 60,
@@ -90,6 +95,7 @@ const styles = StyleSheet.create({
     color: "antiquewhite",
   },
   resultsContainer: {
+    marginBottom: 0,
     padding: 10,
     flexShrink: 1,
   },
@@ -97,6 +103,11 @@ const styles = StyleSheet.create({
     fontSize: 30,
     textAlign: "center",
     marginBottom: 10,
+  },
+  clearPastResultsText: {
+    fontSize: 35,
+    textAlign: "center",
+    color: "antiquewhite",
   },
   pastResultText: {
     fontSize: 30,
@@ -111,11 +122,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#708090",
   },
   clearPastResults: {
-    flexShrink: 1,
     width: "80%",
+    height: 55,
     alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 20,
     backgroundColor: "#b22222",
+    marginVertical: 5,
+    padding: 5,
+    borderRadius: 5,
   },
   operatorAndPreviousExpression: {
     flex: 2,

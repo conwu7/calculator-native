@@ -1,7 +1,6 @@
 {
   "expo": {
-    "name": "calculator-native",
-    "description": "Simple calculator app with access to up the last 10 results",
+    "name": "Calculator",
     "slug": "calculator-native",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,8 +8,8 @@
     "primaryColor": "#2f4f4f",
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
+      "image": "./assets/splashing.png",
+      "resizeMode": "contain",
       "backgroundColor": "#2f4f4f"
     },
     "updates": {
@@ -20,14 +19,12 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "conwu7.calculator",
-      "buildNumber": "1"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#2f4f4f"
       },
       "softwareKeyboardLayoutMode": "pan",
       "package": "conwu7.calculator"
