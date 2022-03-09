@@ -99,7 +99,7 @@ const Calculator = function () {
   // handle selecting a past result - set it to current number string
   const handleUsePastResult = useCallback(
     (pastResult, noLimit) => () => {
-      const resultToUse = pastResult.replace(/,/g, "")
+      const resultToUse = pastResult.toString().replace(/,/g, "")
       if (isNaN(Number(resultToUse))) {
         window.alert(`${pastResult} is not a valid number`)
         return false
@@ -203,9 +203,8 @@ const Calculator = function () {
     const decimalValue = !!decimalSplit[1] ? `.${decimalSplit[1]}` : ""
     const nonDecimals = decimalSplit[0].split("")
 
-    for (let i = nonDecimals.length - 1; i >= 0; i--) {
+    for (let i = nonDecimals.length - 4; i >= 0; i--) {
       const indexFromDecimal = nonDecimals.length - 1 - i
-      if (indexFromDecimal === 0) continue
       if (indexFromDecimal % 3 === 0) nonDecimals[i] += ","
     }
 
@@ -287,16 +286,14 @@ const Calculator = function () {
           result.toString().includes("e") ||
           has12OrMoreDecimalDigits(result)
         ) {
-          result = result.toFixed(12)
+          result = Number(result.toFixed(12))
         }
         // set current number to null. prevent further operations until another number is selected
         // set previous to result. Setting previous number here since user can't mutate result directly
         setCurrentNumberString(null)
         setCurrentNumberAsResult(true)
-        addToPastResults(formatForDisplay(result))
-        setPreviousNumber(
-          formatForDisplay(parseFloat(result)).replace(/,/g, ""),
-        )
+        addToPastResults(result)
+        setPreviousNumber(result)
       }
       // if no calculation is done, set the current operator and the previous number as the current number displayed
       setCurrentOperator(operator)
@@ -529,7 +526,7 @@ const Calculator = function () {
                     adjustsFontSizeToFit
                     style={styles.pastResultText}
                   >
-                    {result}
+                    {formatForDisplay(result)}
                   </KulimText>
                 </TouchableOpacity>
               ))}
